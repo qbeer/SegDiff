@@ -12,7 +12,7 @@ import git
 from mpi4py import MPI
 
 from improved_diffusion import dist_util, logger
-from datasets.monu import load_data, create_dataset
+from datasets.astropath import load_data, get_datasets
 from improved_diffusion.resample import create_named_schedule_sampler
 from improved_diffusion.script_util import (
     model_and_diffusion_defaults,
@@ -30,7 +30,7 @@ def main():
     args = create_argparser().parse_args()
     args.use_fp16 = True
     args.clip_denoised = False
-    args.learn_sigma = False
+    args.learn_sigma = True
     args.sigma_small = False
     args.image_size = 256
     args.num_res_blocks = 3
@@ -41,9 +41,18 @@ def main():
     args.deeper_net = True
     # args.start_print_iter = 4
     # args.save_interval = 4
+    args.data_root = "/home/qbeer/datasets/astropath"
+    args.database = "wsi01"
+    args.level = 3
+    args.layers = [0, 7]
+    args.augment = True
+    args.test_run = False
+    args.mp_enabled = False
+    args.progress = False
+    args.chunked = True
 
-    exp_name = f"monu_{args.rrdb_blocks}_{args.lr}_{args.batch_size}_{args.diffusion_steps}_{str(args.dropout)}_{MPI.COMM_WORLD.Get_rank()}"
-    logs_root = Path(__file__).absolute().parent.parent / "logs"
+    exp_name = f"astropath_{args.rrdb_blocks}_{args.lr}_{args.batch_size}_{args.diffusion_steps}_{str(args.dropout)}_{MPI.COMM_WORLD.Get_rank()}"
+    logs_root = Path(__file__).absolute().parent / "logs"
     log_path = logs_root / f"{datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')}_{exp_name}"
     os.environ["OPENAI_LOGDIR"] = str(log_path)
     set_random_seed(MPI.COMM_WORLD.Get_rank(), deterministic=True)
@@ -74,18 +83,8 @@ def main():
     schedule_sampler = create_named_schedule_sampler(args.schedule_sampler, diffusion)
 
     logger.log("creating data loader...")
-    data = load_data(
-        data_dir=args.data_dir,
-        batch_size=args.batch_size,
-        image_size=args.image_size,
-        class_cond=args.class_cond,
-        class_name=args.class_name,
-        expansion=args.expansion
-    )
-    val_dataset = create_dataset(
-        mode='val',
-        image_size=args.image_size
-    )
+    data = load_data(args, deterministic=True)
+    _, val_dataset = get_datasets(args)
 
     logger.log(f"gpu {MPI.COMM_WORLD.Get_rank()} / {MPI.COMM_WORLD.Get_size()} val length {len(val_dataset)}")
 
