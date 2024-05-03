@@ -2,9 +2,9 @@ import numpy as np
 from skimage.morphology import binary_dilation, disk
 
 
-def WCov_metric(pred, gt_mask):
-    A1 = float(np.count_nonzero(pred))
-    A2 = float(np.count_nonzero(gt_mask))
+def WCov_metric(pred, gt_mask, eps=1e-5):
+    A1 = float(np.count_nonzero(pred)) + eps
+    A2 = float(np.count_nonzero(gt_mask)) + eps
     if A1 >= A2: return A2 / A1
     if A2 > A1: return A1 / A2
 

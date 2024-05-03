@@ -11,7 +11,7 @@ from pathlib import Path
 import torch.distributed as dist
 
 from improved_diffusion import dist_util, logger
-from datasets.monu import create_dataset
+from datasets.astropath import get_datasets
 from improved_diffusion.sampling_util import sampling_major_vote_func
 from improved_diffusion.script_util import (
     model_and_diffusion_defaults,
@@ -46,9 +46,7 @@ def main():
     model.to(dist_util.dev())
     model.eval()
 
-    test_dataset = create_dataset(
-        mode='val',
-    )
+    _, val_dataset = get_datasets(args)
 
     if args.__dict__.get("seed") is None:
         seed = 1234
@@ -57,9 +55,9 @@ def main():
     set_random_seed(seed, deterministic=True)
     logger.log("sampling major vote val")
     (logs_path / "major_vote").mkdir(exist_ok=True)
-    step = int(Path(args.model_path).stem.split("_")[-1])
-    sampling_major_vote_func(diffusion, model, str(logs_path / "major_vote"), test_dataset, logger, args.clip_denoised,
-                             step=step, n_rounds=len(test_dataset))
+    step = int(Path(args.model_path).stem.split("_")[-1].replace('model', ''))
+    sampling_major_vote_func(diffusion, model, str(logs_path / "major_vote"), val_dataset, logger, args.clip_denoised,
+                             step=step, n_rounds=len(val_dataset))
 
     dist.barrier()
     logger.log("sampling complete")

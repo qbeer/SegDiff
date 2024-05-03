@@ -80,6 +80,9 @@ class AstropathDataset(Dataset):
         self.image_size = image_size
         self.augment = augment
         self.equalize = equalize
+        
+        self.mean = torch.from_numpy(np.array([122.5 for _ in range(len(layers))]))
+        self.std = torch.from_numpy(np.array([122.5 for _ in range(len(layers))]))
 
         if tile_paths is not None and sample_ids is not None:
             self.tile_paths = tile_paths

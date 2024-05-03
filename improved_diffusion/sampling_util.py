@@ -65,7 +65,7 @@ def sampling_major_vote_func(diffusion_model, ddp_model, output_folder, dataset,
                 range(n_rounds), desc="Generating image samples for FID evaluation."
         ):
             gt_mask, condition_on, name = next(loader_iter)
-            set_random_seed_for_iterations(step + int(name[0].split("_")[1]))
+            set_random_seed_for_iterations(step + int(name[0].split("_")[-1]))
             gt_mask = (gt_mask + 1.0) / 2.0
             condition_on = condition_on["conditioned_image"]
             former_frame_for_feature_extraction = condition_on.to(dist_util.dev())
