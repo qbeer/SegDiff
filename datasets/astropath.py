@@ -24,7 +24,7 @@ def get_datasets(args):
         progress=args.progress, image_size=256 if args.chunked else 1280,
         equalize=True
     )
-
+    
     # NOTE: need to reinitialize the dataset for validation
     #       to be able to NOT augment the validation set
     test_dataset = AstropathDataset(
@@ -34,8 +34,24 @@ def get_datasets(args):
         tile_paths=dataset.tile_paths, sample_ids=dataset.sample_ids,
         equalize=True
     )
+    
+    unique_sample_ids = np.unique(dataset.sample_ids, return_counts=False)
 
-    return dataset, test_dataset
+    train_unique_sample_ids, validation_unique_sample_ids = train_test_split(
+        unique_sample_ids, test_size=0.15, random_state=args.seed,
+    )
+
+    train_idx = np.where(np.isin(dataset.sample_ids, train_unique_sample_ids))[0]
+    validation_idx = np.where(np.isin(dataset.sample_ids, validation_unique_sample_ids))[0]
+
+    train_dataset = Subset(dataset, train_idx)
+    valid_dataset = Subset(test_dataset, validation_idx)
+
+    train_ids = {dataset.sample_ids[idx] for idx in train_idx}
+    valid_ids = {test_dataset.sample_ids[idx] for idx in validation_idx}
+    assert train_ids.isdisjoint(valid_ids), 'Train and validation sets are not disjoint'
+
+    return train_dataset, valid_dataset
 
 def load_data(args, deterministic=False):
     dataset, _ = get_datasets(args)
