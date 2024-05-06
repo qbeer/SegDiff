@@ -97,8 +97,8 @@ class AstropathDataset(Dataset):
         self.augment = augment
         self.equalize = equalize
         
-        self.mean = torch.from_numpy(np.array([122.5 for _ in range(len(layers))]))
-        self.std = torch.from_numpy(np.array([122.5 for _ in range(len(layers))]))
+        self.mean = torch.from_numpy(np.array([127.5 for _ in range(len(layers))]))
+        self.std = torch.from_numpy(np.array([127.5 for _ in range(len(layers))]))
 
         if tile_paths is not None and sample_ids is not None:
             self.tile_paths = tile_paths
@@ -176,8 +176,6 @@ class AstropathDataset(Dataset):
 
         roi_mask = np.zeros_like(roi_image)
         roi_mask[roi_image > 0] += 255
-        roi_mask = roi_mask[:, :, 2]  # NOTE: get blue channel
-
 
         tumor_image_path = tile_path.name.replace(f'L{self.level}.npy', f'tumor_anno_L{self.level}.png')
         tumor_image_path = os.path.join(tile_path.parent, tumor_image_path)
@@ -185,8 +183,7 @@ class AstropathDataset(Dataset):
 
         tumor_mask = np.zeros_like(tumor_image)
         tumor_mask[tumor_image > 0] += 255
-        tumor_mask = tumor_mask[:, :, 0]  # NOTE: get red channel
-
+        
         # NOTE: mask out the tumor and tile image
         #       with the roi mask
         input_tile[roi_mask == 0] = 0
