@@ -201,6 +201,5 @@ dependencies:
       - imagecodecs==2021.11.20
       - kornia==0.5.11
       - opencv-python==4.5.1.48
-      - pycocotools==2.0.2
       - pycryptodomex==3.20.0
       - xmltodict==0.12.0

@@ -67,20 +67,30 @@ def load_data(args, deterministic=False):
     while True:
         yield from loader
 
-# NOTE: filter out empty ROI masks
-def filter_tile(tile_path, level, minimum_roi=0.10):
+def filter_tile(tile_path, level, minimum_overlap=0.01):
     roi_image_path = tile_path.name.replace(f'L{level}.npy', f'roi_tissue_anno_L{level}.png')
     roi_image_path = os.path.join(tile_path.parent, roi_image_path)
     roi_image = ski.io.imread(roi_image_path)
 
     roi_mask = np.zeros_like(roi_image)
     roi_mask[roi_image > 0] += 1
-    # NOTE: if the roi mask is less then 1% of the image
+
+    tumor_image_path = tile_path.name.replace(f'L{level}.npy', f'tumor_anno_L{level}.png')
+    tumor_image_path = os.path.join(tile_path.parent, tumor_image_path)
+    tumor_image = ski.io.imread(tumor_image_path)
+
+    tumor_mask = np.zeros_like(tumor_image)
+    tumor_mask[tumor_image > 0] += 1
+
+    # NOTE: if both the roi mask and the tumor mask
+    #       is less then 1% of the image
     #       discard the tile
-    if roi_mask.sum() / np.prod(roi_mask[:, :, 0].shape) < minimum_roi:
+    if (roi_mask.sum() / np.prod(roi_mask.shape)) < minimum_overlap and\
+            (tumor_mask.sum() / np.prod(tumor_mask.shape)) < minimum_overlap:
         return None
     else:
         return tile_path
+
 
 
 class AstropathDataset(Dataset):
@@ -103,12 +113,9 @@ class AstropathDataset(Dataset):
         if tile_paths is not None and sample_ids is not None:
             self.tile_paths = tile_paths
             self.sample_ids = sample_ids
-
-            shard = MPI.COMM_WORLD.Get_rank()
-            num_shards = MPI.COMM_WORLD.Get_size()
             
-            self.tile_paths = self.tile_paths[shard::num_shards]
-            self.sample_ids = self.sample_ids[shard::num_shards]
+            self.tile_paths = self.tile_paths
+            self.sample_ids = self.sample_ids
 
             return
 
@@ -184,10 +191,10 @@ class AstropathDataset(Dataset):
         tumor_mask = np.zeros_like(tumor_image)
         tumor_mask[tumor_image > 0] += 255
         
-        # NOTE: mask out the tumor and tile image
-        #       with the roi mask
-        input_tile[roi_mask == 0] = 0
-        tumor_mask[roi_mask == 0] = 0
+        valid_mask = (tumor_mask | roi_mask) > 0
+        invalid_mask = ~valid_mask
+
+        input_tile[invalid_mask] = 0
         
         if self.image_size != 256:
             input_tile = ski.transform.resize(input_tile, (self.image_size, self.image_size), order=1)
@@ -236,8 +243,8 @@ class AstropathDataset(Dataset):
                     tumor_mask = ski.transform.resize(_tumor_mask, (self.image_size, self.image_size), order=0)
                     roi_mask = ski.transform.resize(_roi_mask, (self.image_size, self.image_size), order=0)
 
-        min_x, max_x = roi_mask.nonzero()[0].min(), roi_mask.nonzero()[0].max()
-        min_y, max_y = roi_mask.nonzero()[1].min(), roi_mask.nonzero()[1].max()
+        min_x, max_x = valid_mask.nonzero()[0].min(), valid_mask.nonzero()[0].max()
+        min_y, max_y = valid_mask.nonzero()[1].min(), valid_mask.nonzero()[1].max()
 
         bbox = [min_x, min_y, max_x, max_y]
         bbox = torch.from_numpy(np.array(bbox)).float()

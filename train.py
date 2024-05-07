@@ -41,14 +41,14 @@ def main():
     args.deeper_net = True
     # args.start_print_iter = 4
     # args.save_interval = 4
-    args.data_root = "/home/qbeer/datasets/astropath"
+    args.data_root = "./data"
     args.database = "wsi01"
-    args.level = 3
+    args.level = 4
     args.layers = [0, 7]
     args.augment = True
     args.test_run = False
     args.mp_enabled = False
-    args.progress = False
+    args.progress = True
     args.chunked = True
 
     exp_name = f"astropath_{args.rrdb_blocks}_{args.lr}_{args.batch_size}_{args.diffusion_steps}_{str(args.dropout)}_{MPI.COMM_WORLD.Get_rank()}"
