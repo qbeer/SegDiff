@@ -35,12 +35,12 @@ Training options:
 
 Training script example:
 ```
-CUDA_VISIBLE_DEVICES=0,1,2,3 mpiexec -n 4 python image_train_diff_medical.py --rrdb_blocks 12 --batch_size 2 --lr 0.0001 --diffusion_steps 100
+CUDA_VISIBLE_DEVICES=0,1,2,3 mpiexec -n 4 python train.py --rrdb_blocks 12 --batch_size 2 --lr 0.0001 --diffusion_steps 100
 ```
 
 Evaluation script example:
 ```
-CUDA_VISIBLE_DEVICES=0 mpiexec -n 1 python image_sample_diff_medical.py --model_path path-for-model-weights
+CUDA_VISIBLE_DEVICES=0 mpiexec -n 1 python sample.py --model_path path-for-model-weights
 ``` 
 
 ### Based on

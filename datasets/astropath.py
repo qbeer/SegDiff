@@ -22,7 +22,7 @@ def get_datasets(args):
         args.data_root, database=args.database, level=args.level, layers=args.layers,
         augment=args.augment, test_run=args.test_run, mp_enabled=args.mp_enabled,
         progress=args.progress, image_size=256 if args.chunked else 1280,
-        equalize=True
+        equalize=False
     )
     
     # NOTE: need to reinitialize the dataset for validation
@@ -32,7 +32,7 @@ def get_datasets(args):
         augment=False, test_run=args.test_run, image_size=256 if args.chunked else 1280,
         # NOTE: add the same seed to make sure the same samples are in the validation set
         tile_paths=dataset.tile_paths, sample_ids=dataset.sample_ids,
-        equalize=True
+        equalize=False
     )
     
     unique_sample_ids = np.unique(dataset.sample_ids, return_counts=False)

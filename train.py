@@ -55,8 +55,8 @@ def main():
     logs_root = Path(__file__).absolute().parent / "logs"
     log_path = logs_root / f"{datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')}_{exp_name}"
     os.environ["OPENAI_LOGDIR"] = str(log_path)
-    set_random_seed(MPI.COMM_WORLD.Get_rank(), deterministic=True)
-    set_random_seed_for_iterations(MPI.COMM_WORLD.Get_rank())
+    set_random_seed(1234, deterministic=True)
+    set_random_seed_for_iterations(1234)
     dist_util.setup_dist()
     logger.configure(dir=str(log_path))
 

@@ -80,7 +80,7 @@ def sampling_major_vote_func(diffusion_model, ddp_model, output_folder, dataset,
                     os.path.join(output_folder, f"{name[i]}_gt.png"))
 
             for i in range(condition_on.shape[0]):
-                denorm_condition_on = denormalize(condition_on.clone(), mean=dataset.mean, std=dataset.std)
+                denorm_condition_on = denormalize(condition_on.clone(), mean=dataset.dataset.mean, std=dataset.dataset.std)
                 tvu.save_image(
                     denorm_condition_on[i,] / 255.,
                     os.path.join(output_folder, f"{name[i]}_condition_on.png")

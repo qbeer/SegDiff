@@ -46,13 +46,14 @@ def main():
     model.to(dist_util.dev())
     model.eval()
 
-    _, val_dataset = get_datasets(args)
-
     if args.__dict__.get("seed") is None:
         seed = 1234
     else:
         seed = int(args.__dict__.get("seed"))
     set_random_seed(seed, deterministic=True)
+
+    _, val_dataset = get_datasets(args)
+    
     logger.log("sampling major vote val")
     (logs_path / "major_vote").mkdir(exist_ok=True)
     step = int(Path(args.model_path).stem.split("_")[-1].replace('model', ''))
